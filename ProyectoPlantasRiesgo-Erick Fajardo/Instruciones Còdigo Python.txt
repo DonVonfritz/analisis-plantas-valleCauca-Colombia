@@ -1,0 +1,41 @@
+
+
+
+
+----------------------Universidad Nacional Abierta y a Distancia   UNAD----------------
+
+Erick Fajardo
+
+BIG DATA TAREA 3
+
+Universidad Nacional Abierta y a Distancia  UNAD
+
+Curso: BIG DATA
+
+
+
+PROYECTO  
+
+#Código del Proyecto Plantas en Categoría de Riesgo
+
+En esta carpeta encontraras estos códigos necesarios para ejecutar el proyecto.
+
+Este es el Código para hacer las consultas
+# Tarea 3 BIG DATA_ UNAD_ERICK FAJARDO 
+
+
+cargar_datos.py: Carga datos desde un portal de datos abiertos.
+cargar_hadoop.py: Carga datos en Hadoop.
+procesamiento_batch.py: Realiza un procesamiento batch en Spark.
+procesamiento_streaming.py: Realiza un procesamiento en streaming en Spark.
+
+
+Cualquier duda por favor consultarme al siguiente correo:   
+
+    
+
+   eafajardob@unadvirtual.edu.co
+
+
+
+-------//-------
