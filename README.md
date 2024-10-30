@@ -60,8 +60,7 @@ spark-submit batch_processing/analyze_plants_batch.py
 Procesamiento en Tiempo Real (Streaming)
 Inicia la simulación de datos en tiempo real enviándolos al tema de Kafka. Luego, ejecuta el script de Spark Streaming para procesar estos datos:
 Simulación de datos: Usa un generador de datos para enviar datos simulados al tema de Kafka.
-Pyton
- código 
+ 
 python
 data_stream_generator.py
 
@@ -81,5 +80,6 @@ Enlace al Conjunto de Datos
 Si necesitas descargar el archivo original, accede al siguiente enlace: PLANTAS DEL DEPARTAMENTO DEL VALLE DEL CAUCA CON CATEGORÍA DE AMENAZA.  
 https://www.datos.gov.co/Ambiente-y-Desarrollo-Sostenible/PLANTAS-DEL-DEPARTAMENTO-DEL-VALLE-DEL-CAUCA-CON-C/di5n-jaf8/data_preview 
 
-
+Presentación Complementaria para La Universidad Nacional Abierta y a Distancia UNAD
+Link CANVA:   https://www.canva.com/design/DAGUaougbC0/RPYHmPtTDOyVm8t6mPBNew/edit?utm_content=DAGUaougbC0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
 
