@@ -5,6 +5,7 @@
 ----------------------Universidad Nacional Abierta y a Distancia   UNAD----------------
 
 Erick Fajardo
+eafajardob@unadvirtual.edu.co
 
 BIG DATA TAREA 3
 
@@ -31,10 +32,10 @@ procesamiento_streaming.py: Realiza un procesamiento en streaming en Spark.
 
 
 Cualquier duda por favor consultarme al siguiente correo:   
-
-    
+  
 
    eafajardob@unadvirtual.edu.co
+
 
 
 
