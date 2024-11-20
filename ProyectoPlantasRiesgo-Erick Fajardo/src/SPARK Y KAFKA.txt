@@ -1,0 +1,226 @@
+
+     19 /11/2024
+
+
+-----revisión y actualización-------------
+
+              SPARK  Y  KAFKA
+
+-----------
+2.	Implementación en Spark    Aplicaciones
+
+a.	Procesamiento Batch (Lotes):
+
+Los datos se cargan desde un archivo .csv y se procesan en un clúster local de Spark.
+Realice operaciones de limpieza y transformación, incluyendo análisis exploratorio de datos (EDA) para observar distribuciones, categorías de amenaza y otros patrones.
+
+•	Hadoop se utiliza para almacenar y gestionar el conjunto de datos en el sistema de archivos distribuidos (HDFS).
+
+•	Spark se emplea para el análisis por lotes mediante Python, donde cargue el archivo CSV en un DataFrame y aplique diversas operaciones como limpieza y transformación de datos.
+
+
+Paso 1: Cargar el conjunto de datos 
+
+•	Utilicé Spark para cargar el conjunto de datos sobre las plantas en peligro, 
+        porque el archivo proviene de una fuente de Datos abiertos de olombia en línea, 
+        lo descargargue y lo guarde en formato compatible (CSV).
+
+•	Utilicé el siguiente código base en Python para cargar el archivo en un DataFrame:
+
+from pyspark.sql import SparkSession
+
+# Crear una sesión de Spark
+spark = SparkSession.builder.appName("BiodiversidadValleCauca").getOrCreate()
+
+# Cargar el conjunto de datos
+datos_plantas = spark.read.csv("ruta/del/dataset.csv", header=True, inferSchema=True)
+
+
+Paso 2: Limpieza y Transformación de Datos
+
+•	Realicé operaciones de limpieza, como eliminar valores nulos o duplicados y corregí los formatos de datos.
+•	Utilicé este código para la limpieza y transformación usando Spark DataFrames:
+
+# Eliminar duplicados
+datos_plantas = datos_plantas.dropDuplicates()
+
+# Eliminar filas con valores nulos en columnas críticas
+datos_plantas = datos_plantas.dropna(subset=["nombre_cientifico", "estatus_amenaza"])
+
+# Convertir columnas a tipos específicos si es necesario (por ejemplo, convertir fechas)
+from pyspark.sql.functions import to_date
+datos_plantas = datos_plantas.withColumn("fecha_registro", to_date("fecha_registro", "yyyy-MM-dd"))
+
+
+Paso 3: Análisis Exploratorio de Datos (EDA)
+
+•	Realicé un análisis exploratorio básico para obtener información preliminar del conjunto de datos, usando DataFrames de Spark:
+
+# Contar las especies en peligro según el nivel de amenaza
+datos_plantas.groupBy("estatus_amenaza").count().show()
+
+# Contar especies por familia
+datos_plantas.groupBy("familia").count().orderBy("count", ascending=False).show()
+
+
+Paso 4: Almacenar los Resultados Procesados
+
+•	Guardé los resultados procesados en un archivo Parquet o en una base de datos.
+  
+# Guardar en formato Parquet para futuras consultas rápidas
+datos_plantas.write.parquet("ruta/de/salida/datos_plantas_procesados.parquet")
+
+b.   Procesamiento en Tiempo Real  Streaming con Spark Streaming y Kafka:
+•	Kafka está configurado para simular la llegada de datos en tiempo real desde un "topic" de Kafka, para enviar registros de plantas en peligro.
+•	Utilicé Spark Streaming para recibir y procesar estos datos, al consumir estos datos de Kafka y realizar un análisis en tiempo real, por ejemplo,  para contar eventos o calcular estadísticas específicas de riesgo para ciertas especies de plantas.
+•	Este procesamiento permite ver la frecuencia y tipo de registros nuevos en tiempo real.
+
+
+Paso 1: Configuración de Kafka
+
+•  Configuré Kafka para recibir datos en tiempo real. Defini un tema en Kafka (“plantas_valle_cauca”) y utilicé un generador de datos para simular la llegada de nuevos registros.
+
+# Crear un topic en Kafka
+kafka-topics.sh --create --topic plantas_valle_cauca --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+Paso 2: Implementar la Aplicación Spark Streaming
+•	Cree una aplicación de Spark Streaming que consume datos desde el tema de Kafka y procesa los datos en tiempo real.
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import expr
+from pyspark.sql.types import StringType, StructType, StructField
+
+# Crear una sesión de Spark con soporte para streaming
+spark = SparkSession.builder.appName("StreamingBiodiversidad").getOrCreate()
+
+# Definir el esquema de los datos entrantes
+schema = StructType([
+    StructField("familia", StringType(), True),
+    StructField("nombre_cientifico", StringType(), True),
+    StructField("estatus_amenaza", StringType(), True),
+    StructField("ubicacion", StringType(), True),
+    StructField("fecha_registro", StringType(), True) ])
+
+
+
+# Leer desde Kafka
+datos_streaming = spark.readStream.format("kafka") \
+    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("subscribe", "plantas_valle_cauca") \    .load()
+# Convertir los datos a un DataFrame con el esquema adecuado
+datos_streaming = datos_streaming.selectExpr("CAST(value AS STRING)") \   
+    .selectExpr("split(value, ',')[0] as familia", "split(value, ',')[1] as nombre_cientifico", 
+                "split(value, ',')[2] as estatus_amenaza", "split(value, ',')[3] as ubicacion",                 "split(value, ',')[4] as fecha_registro")
+
+Paso 3: Procesamiento en Tiempo Real
+•	Apliqué procesamiento o cálculo en tiempo real, como el conteo de especies amenazadas que se están transmitiendo o estadísticas básicas.
+
+# Conteo de especies en tiempo real según el nivel de amenaza
+especies_contadas = datos_streaming.groupBy("estatus_amenaza").count()
+
+# Configurar el streaming para mostrar el conteo de especies en tiempo real
+query = especies_contadas.writeStream.outputMode("complete").format("console").start()
+
+
+Paso 4: Visualización de Resultados en Tiempo Real
+•	Los resultados se visualizan mediante el puerto 4040 de Spark para ver los datos en tiempo real, también está prevista la exportación a formatos compatibles con herramientas de visualización, como Power BI o Excel, para un análisis más profundo.
+
+•	Configuré una visualización que muestra los resultados del procesamiento en tiempo real, usé  Spark para mostrar el contenido en consola o enviar los resultados procesados a una base de datos o herramienta de visualización.
+
+# Guardar los resultados en tiempo real en una base de datos o archivo para visualización externa
+especies_contadas.writeStream \
+    .outputMode("complete") \
+    .format("parquet") \
+    .option("path", "ruta/salida/realtime_count") \
+    .option("checkpointLocation", "ruta/checkpoint") \
+    .start()
+
+•	La arquitectura se implementó en una máquina virtual usando VirtualBox con Ubuntu, y se instaló Hadoop y Spark para manejar grandes volúmenes de datos de manera eficiente.
+
+
+
+-----------
+
+
+•	Explicación Detallada del Código y las Tecnologías Utilizadas.
+
+R/:       A) Procesamiento por lotes
+
+  Utilicé DataFrames y Spark SQL para analizar el conjunto de datos de plantas en lotes. El código aplica operaciones de limpieza, transformación y análisis exploratorio de datos (EDA), como la eliminación de registros incompletos y la agrupación por categoría de amenaza.
+
+Hadoop y Spark : Usé Hadoop para el almacenamiento distribuido y Spark para el procesamiento de los datos en modo por lotes y streaming.
+
+Código Batch en Spark (Python):
+
+Cargué el conjunto de datos en un DataFrame de Spark, apliqué filtros para limpiar los datos y seleccioné las columnas relevantes (nombre de la planta, categoría de amenaza, etc.). Guardé el DataFrame procesado en un archivo CSVpara su análisis
+
+Código Python:
+
+df = spark.read.csv("ruta/del/archivo.csv", header=True, inferSchema=True)
+df_filtered = df.
+df_filtere
+filter(df["categoria_amenaza"] != "Desconocida")
+df_filtered.write.format("csv").option("header", "true").save("/home/hadoop/plantas_procesadas.csv")
+
+Kafka y Spark Transmisión: He creado un tema en Kafka ( plantas_topic) para enviar datos de plantas en peligro, Configuré un Spark Streaming que se conecta al tema de Kafka, consume los datos en tiempo real y muestra estadísticas como el número de plantas registradas por categoría de amenaza. 
+
+
+
+
+------   -----
+
+
+codigo consultas:  
+
+CÓDIGO   PYTHON
+      
+ Mediante este código se hizo el análisis del Data Set desde el comienzo, el cargue de librerías, el montaje en spark, definiendo las rutas, leer los archivos, generar el esquema , la muestra de las primeras filas del DataFrame, unas estadísticas básicas, y posteriormente las consultas a la base de datos.
+
+# Importamos librerías necesarias
+from pyspark.sql import SparkSession, functions as F
+
+# Inicializa la sesión de Spark
+spark = SparkSession.builder.appName('Tarea3').getOrCreate()
+
+# Define la ruta del archivo .csv en tu sistema local
+file_path = '/ruta/a/tu/di5n-jaf8.csv'  # Cambia esta ruta según donde esté tu archivo
+
+# Lee el archivo .csv
+df = spark.read.format('csv').option('header', 'true').option('inferSchema', 'true').load(file_path)
+
+# Imprimimos el esquema
+df.printSchema()
+
+# Muestra las primeras filas del DataFrame
+df.show()
+
+# Estadísticas básicas
+df.summary().show()
+
+# Pregunta 1: Filtrar plantas de una familia específica
+print("Plantas de la familia 'Nombre de la familia'\n")
+plantas_familia = df.filter(F.col('Familia') == 'Nombre de la familia').select('Nombre científico', 'Nombres comunes', 'Año')
+plantas_familia.show()
+
+# Pregunta 2: Contar cuántas especies hay por cada año
+print("Número de especies por año\n")
+especies_por_año = df.groupBy('Año').count().sort(F.col('Año'))
+especies_por_año.show()
+
+# Pregunta 3: Filtrar por amenaza a nivel nacional
+print("Plantas amenazadas a nivel nacional\n")
+plantas_amenazadas = df.filter(F.col('AMENAZA A NIVEL NACIONAL (Resolución 192 de 2014)') == 'Sí').select('Nombre científico', 'Nombres comunes', 'Familia')
+plantas_amenazadas.show()
+
+# Pregunta 4: Contar el número de plantas por familia
+print("Número de plantas por familia\n")
+plantas_por_familia = df.groupBy('Familia').count().sort(F.col('count').desc())
+plantas_por_familia.show()
+
+# Pregunta 5: Obtener las plantas más recientes registradas
+print("Plantas más recientes registradas\n")
+plantas_recientes = df.sort(F.col('Año').desc()).select('Nombre científico', 'Año')
+plantas_recientes.show()
+
+
+
